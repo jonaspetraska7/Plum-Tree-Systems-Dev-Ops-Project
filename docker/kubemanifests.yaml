@@ -1,0 +1,316 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: database
+    name: database
+  spec:
+    ports:
+    - name: "3306"
+      port: 3306
+      targetPort: 3306
+    selector:
+      io.kompose.service: database
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: nginx
+    name: nginx
+  spec:
+    type : LoadBalancer
+    ports:
+    - name: "8089"
+      port: 8089
+      targetPort: 80
+    selector:
+      io.kompose.service: nginx
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: phpmyadmin
+    name: phpmyadmin
+  spec:
+    ports:
+    - name: "5005"
+      port: 5005
+      targetPort: 80
+    selector:
+      io.kompose.service: phpmyadmin
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: database
+    name: database
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        name: sawtooth-0
+    template:
+      metadata:
+        labels:
+          name: sawtooth-0
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_DATABASE
+            value: plum
+          - name: MYSQL_PASSWORD
+            value: root
+          - name: MYSQL_ROOT_PASSWORD
+            value: root
+          - name: MYSQL_USER
+            value: root
+          image: mysql
+          name: database
+          ports:
+          - containerPort: 3306
+          resources: {}
+          volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: database-claim0
+        restartPolicy: Always
+        volumes:
+        - name: database-claim0
+          persistentVolumeClaim:
+            claimName: database-claim0
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      io.kompose.service: database-claim0
+    name: database-claim0
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Mi
+  status: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: nginx
+    name: nginx
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        name: sawtooth-0
+    template:
+      metadata:
+        labels:
+          name: sawtooth-0
+      spec:
+        containers:
+        - image: nginx
+          name: nginx
+          ports:
+          - containerPort: 80
+          resources: {}
+          volumeMounts:
+          - mountPath: /var/www
+            name: nginx-claim0
+          - mountPath: /etc/nginx/nginx.conf
+            name: nginx-claim1
+          - mountPath: /etc/nginx/sites-available
+            name: nginx-claim2
+          - mountPath: /etc/nginx/conf.d
+            name: nginx-claim3
+        restartPolicy: Always
+        volumes:
+        - name: nginx-claim0
+          persistentVolumeClaim:
+            claimName: nginx-claim0
+        - name: nginx-claim1
+          persistentVolumeClaim:
+            claimName: nginx-claim1
+        - name: nginx-claim2
+          persistentVolumeClaim:
+            claimName: nginx-claim2
+        - name: nginx-claim3
+          persistentVolumeClaim:
+            claimName: nginx-claim3
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      io.kompose.service: nginx-claim0
+    name: nginx-claim0
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Mi
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      io.kompose.service: nginx-claim1
+    name: nginx-claim1
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Mi
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      io.kompose.service: nginx-claim2
+    name: nginx-claim2
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Mi
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      io.kompose.service: nginx-claim3
+    name: nginx-claim3
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Mi
+  status: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: php-fpm
+    name: php-fpm
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        name: sawtooth-0
+    template:
+      metadata:
+        labels:
+          name: sawtooth-0
+      spec:
+        containers:
+        - env:
+          - name: APP_ENV
+            value: dev
+          - name: APP_SECRET
+            value: 8025df248eeb71c234a6647616e8f390
+          - name: DATABASE_URL
+            value: mysql://root:root@database:3306/plum?serverVersion=5.7
+          image: php-fpm
+          name: php-fpm
+          resources: {}
+          volumeMounts:
+          - mountPath: /var/www
+            name: php-fpm-claim0
+        restartPolicy: Always
+        volumes:
+        - name: php-fpm-claim0
+          persistentVolumeClaim:
+            claimName: php-fpm-claim0
+  status: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    creationTimestamp: null
+    labels:
+      io.kompose.service: php-fpm-claim0
+    name: php-fpm-claim0
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 100Mi
+  status: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert -f docker-compose.yml
+        -o kubemanifests.yaml
+      kompose.version: 1.18.0 (06a2e56)
+    creationTimestamp: null
+    labels:
+      io.kompose.service: phpmyadmin
+    name: phpmyadmin
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        name: sawtooth-0
+    template:
+      metadata:
+        labels:
+          name: sawtooth-0
+      spec:
+        containers:
+        - image: phpmyadmin/phpmyadmin
+          name: phpmyadmin
+          ports:
+          - containerPort: 80
+          resources: {}
+        restartPolicy: Always
+  status: {}
+kind: List
+metadata: {}
+
